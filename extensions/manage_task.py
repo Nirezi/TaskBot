@@ -1,8 +1,9 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
-
+import datetime
 import sqlite3
+
+import discord
+from discord import app_commands
+from discord.ext import commands
 
 
 class ManageTask(commands.Cog):
@@ -14,8 +15,8 @@ class ManageTask(commands.Cog):
     async def add(self, interaction: discord.Interaction, title: str, description: str, deadline: str) -> None:
         conn = sqlite3.connect('tasks.db')
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO tasks VALUES (?, ?, ?, ?, ?)',
-                       (interaction.id, title, description, "YET", deadline))
+        cursor.execute('INSERT INTO tasks VALUES (?, ?, ?, ?)',
+                       (interaction.id, title, description, deadline))
         conn.commit()
         conn.close()
         await interaction.response.send_message("Task added")
@@ -23,9 +24,11 @@ class ManageTask(commands.Cog):
     @app_commands.command(name="list", description="List all tasks")
     @app_commands.guild_only()
     async def _list(self, interaction: discord.Interaction) -> None:
+        now = datetime.datetime.now()
+        now_unix = now.timestamp()
         conn = sqlite3.connect('tasks.db')
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM tasks WHERE task_status = "YET"')
+        cursor.execute('SELECT * FROM tasks WHERE deadline > ?', (now_unix,))
         tasks = cursor.fetchall()
         conn.close()
         await interaction.response.send_message("\n".join(str(task) for task in tasks)+" tasks")
