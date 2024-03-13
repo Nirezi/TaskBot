@@ -1,11 +1,11 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord import app_commands
 
 import sqlite3
 
 
-class Task(commands.Cog):
+class ManageTask(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -32,4 +32,4 @@ class Task(commands.Cog):
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Task(bot))
+    await bot.add_cog(ManageTask(bot))
