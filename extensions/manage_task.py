@@ -22,7 +22,7 @@ class ManageTask(commands.Cog):
 
     @app_commands.command(name="list", description="List all tasks")
     @app_commands.guild_only()
-    async def list(self, interaction: discord.Interaction) -> None:
+    async def _list(self, interaction: discord.Interaction) -> None:
         conn = sqlite3.connect('tasks.db')
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM tasks WHERE task_status = "YET"')
