@@ -14,7 +14,7 @@ class CheckTask(commands.Cog):
     @staticmethod
     async def generate_task_list_text(task_list: list) -> str:
         now = datetime.datetime.now()
-        response = f"{now.month}月{now.day}日時点の課題状況をお知らせします。\n"
+        response = ""
         tomorrow_task = []
         for (_, title, description, deadline) in task_list:
             deadline = datetime.datetime.fromtimestamp(deadline)
