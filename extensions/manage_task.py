@@ -59,14 +59,25 @@ class ManageTask(commands.Cog):
 
     @app_commands.command(name="list", description="List all tasks")
     @app_commands.guild_only()
-    async def _list(self, interaction: discord.Interaction) -> None:
+    async def _list(self, interaction: discord.Interaction, include_past: bool = False) -> None:
+        # TODO 過去の課題は明記するとか？
+        # TODO あと検索機能とかほしいよね？
         now = datetime.datetime.now()
         conn = sqlite3.connect('tasks.db')
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM tasks WHERE deadline > ?', (now.timestamp(),))
-        tasks = cursor.fetchall()
+        if include_past:
+            cursor.execute('SELECT * FROM tasks')
+        else:
+            cursor.execute('SELECT * FROM tasks WHERE task_deadline > ?', (now.timestamp(),))
+        task_list = cursor.fetchall()
         conn.close()
-        await interaction.response.send_message("\n".join(str(task) for task in tasks)+" tasks")
+
+        if task_list:
+            response = await self.bot.get_cog("CheckTask").generate_task_list_text(task_list)
+        else:
+            response = "今のところ課題はないよ！やったね！！"
+
+        await interaction.response.send_message(response)
 
 
 async def setup(bot: commands.Bot) -> None:
