@@ -65,17 +65,22 @@ class ManageTask(commands.Cog):
         now = datetime.datetime.now()
         conn = sqlite3.connect('tasks.db')
         cursor = conn.cursor()
-        if include_past:
-            cursor.execute('SELECT * FROM tasks')
-        else:
-            cursor.execute('SELECT * FROM tasks WHERE task_deadline > ?', (now.timestamp(),))
+
+        cursor.execute('SELECT * FROM tasks WHERE task_deadline > ?', (now.timestamp(),))
         task_list = cursor.fetchall()
+
+        cursor.execute('SELECT * FROM tasks WHERE task_deadline <= ?', (now.timestamp(),))
+        past_task_list = cursor.fetchall()
         conn.close()
 
         if task_list:
             response = await self.bot.get_cog("CheckTask").generate_task_list_text(task_list)
         else:
             response = "今のところ課題はないよ！やったね！！"
+
+        if include_past and past_task_list:
+            response += "\n\n過去の課題\n"
+            response += await self.bot.get_cog("CheckTask").generate_task_list_text(past_task_list, check_tomorrow=False)
 
         await interaction.response.send_message(response)
 

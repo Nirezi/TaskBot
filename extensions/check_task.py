@@ -12,7 +12,7 @@ class CheckTask(commands.Cog):
         self.notice_task.start()
 
     @staticmethod
-    async def generate_task_list_text(task_list: list) -> str:
+    async def generate_task_list_text(task_list: list, check_tomorrow=True) -> str:
         now = datetime.datetime.now()
         response = ""
         tomorrow_task = []
@@ -22,11 +22,12 @@ class CheckTask(commands.Cog):
                 tomorrow_task.append(title)
             response += f"- {title}　～{deadline.month}月{deadline.day}日\n{description}\n"
 
-        if tomorrow_task:
-            response += "\n期限が明日の課題があります。\n"
-            response += "、".join(tomorrow_task)
-        else:
-            response += "\n期限が明日の課題はありません。"
+        if check_tomorrow:
+            if tomorrow_task:
+                response += "\n期限が明日の課題があります。\n"
+                response += await CheckTask.generate_task_list_text(tomorrow_task)
+            else:
+                response += "\n期限が明日の課題はありません。"
 
         return response
 
