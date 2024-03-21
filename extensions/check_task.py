@@ -18,7 +18,7 @@ class CheckTask(commands.Cog):
         tomorrow_task = []
         for (_, title, description, deadline) in task_list:
             deadline = datetime.datetime.fromtimestamp(deadline)
-            if (deadline - now) < datetime.timedelta(days=1):
+            if (deadline - now) < datetime.timedelta(days=1) and deadline > now:
                 tomorrow_task.append((_, title, description, deadline))
             response += f"- {title}　～{deadline.month}月{deadline.day}日\n{description}\n"
 
