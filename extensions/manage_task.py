@@ -84,6 +84,22 @@ class ManageTask(commands.Cog):
 
         await interaction.response.send_message(response)
 
+    @app_commands.command(name="search", description="Search tasks")
+    @app_commands.guild_only()
+    async def search(self, interaction: discord.Interaction, keyword: str) -> None:
+        conn = sqlite3.connect('tasks.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM tasks WHERE task_title LIKE ?', (f'%{keyword}%',))  # keyword in title
+        task_list = cursor.fetchall()
+        conn.close()
+
+        if task_list:
+            response = await self.bot.get_cog("CheckTask").generate_task_list_text(task_list)
+        else:
+            response = "該当する課題はありませんでした。"
+
+        await interaction.response.send_message(response)
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(ManageTask(bot))
