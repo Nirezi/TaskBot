@@ -39,11 +39,10 @@ class CheckTask(commands.Cog):
         if not(now.hour == 17 and now.minute == 0):
             return
 
-        conn = sqlite3.connect('tasks.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM tasks WHERE task_deadline > ?', (now.timestamp(),))
-        task_list = cursor.fetchall()
-        conn.close()
+        with sqlite3.connect('tasks.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM tasks WHERE task_deadline > ?', (now.timestamp(),))
+            task_list = cursor.fetchall()
 
         response = f"<@&{NOTICE_ROLE_ID}>\n{now.month}月{now.day}日時点の課題状況をお知らせします。\n"
         if not task_list:

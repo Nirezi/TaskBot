@@ -49,12 +49,11 @@ class ManageTask(commands.Cog):
             await interaction.response.send_message("締切日が過去の日付です。")
             return
 
-        conn = sqlite3.connect('tasks.db')
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO tasks VALUES (?, ?, ?, ?)',
-                       (interaction.id, title, description, deadline_datetime.timestamp()))
-        conn.commit()
-        conn.close()
+        with sqlite3.connect('tasks.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO tasks VALUES (?, ?, ?, ?)',
+                           (interaction.id, title, description, deadline_datetime.timestamp()))
+            conn.commit()
         await interaction.response.send_message("Task added")
 
     @app_commands.command(name="list", description="List all tasks")
@@ -63,15 +62,13 @@ class ManageTask(commands.Cog):
         # TODO 過去の課題は明記するとか？
         # TODO あと検索機能とかほしいよね？
         now = datetime.datetime.now()
-        conn = sqlite3.connect('tasks.db')
-        cursor = conn.cursor()
+        with sqlite3.connect('tasks.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM tasks WHERE task_deadline > ?', (now.timestamp(),))
+            task_list = cursor.fetchall()
 
-        cursor.execute('SELECT * FROM tasks WHERE task_deadline > ?', (now.timestamp(),))
-        task_list = cursor.fetchall()
-
-        cursor.execute('SELECT * FROM tasks WHERE task_deadline <= ?', (now.timestamp(),))
-        past_task_list = cursor.fetchall()
-        conn.close()
+            cursor.execute('SELECT * FROM tasks WHERE task_deadline <= ?', (now.timestamp(),))
+            past_task_list = cursor.fetchall()
 
         if task_list:
             response = await self.bot.get_cog("CheckTask").generate_task_list_text(task_list)
@@ -87,11 +84,10 @@ class ManageTask(commands.Cog):
     @app_commands.command(name="search", description="Search tasks")
     @app_commands.guild_only()
     async def search(self, interaction: discord.Interaction, keyword: str) -> None:
-        conn = sqlite3.connect('tasks.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM tasks WHERE task_title LIKE ?', (f'%{keyword}%',))  # keyword in title
-        task_list = cursor.fetchall()
-        conn.close()
+        with sqlite3.connect('tasks.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM tasks WHERE task_title LIKE ?', (f'%{keyword}%',))  # keyword in title
+            task_list = cursor.fetchall()
 
         if task_list:
             response = await self.bot.get_cog("CheckTask").generate_task_list_text(task_list)
