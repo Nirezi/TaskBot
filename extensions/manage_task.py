@@ -59,8 +59,6 @@ class ManageTask(commands.Cog):
     @app_commands.command(name="list", description="List all tasks")
     @app_commands.guild_only()
     async def _list(self, interaction: discord.Interaction, include_past: bool = False) -> None:
-        # TODO 過去の課題は明記するとか？
-        # TODO あと検索機能とかほしいよね？
         now = datetime.datetime.now()
         with sqlite3.connect('tasks.db') as conn:
             cursor = conn.cursor()
