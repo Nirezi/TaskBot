@@ -19,13 +19,14 @@ class CheckTask(commands.Cog):
         for (_, title, description, deadline) in task_list:
             deadline = datetime.datetime.fromtimestamp(deadline)
             if (deadline - now) < datetime.timedelta(days=1):
-                tomorrow_task.append(title)
+                tomorrow_task.append((_, title, description, deadline))
             response += f"- {title}　～{deadline.month}月{deadline.day}日\n{description}\n"
 
         if check_tomorrow:
             if tomorrow_task:
                 response += "\n期限が明日の課題があります。\n"
-                response += await CheckTask.generate_task_list_text(tomorrow_task)
+                for (_, title, description, deadline) in tomorrow_task:
+                    response += f"- {title}　～{deadline.month}月{deadline.day}日\n{description}\n"
             else:
                 response += "\n期限が明日の課題はありません。"
 
