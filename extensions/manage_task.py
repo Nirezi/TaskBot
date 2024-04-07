@@ -6,6 +6,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from models import Task
+
 
 class ManageTask(commands.Cog):
     def __init__(self, bot):
@@ -68,6 +70,8 @@ class ManageTask(commands.Cog):
             cursor.execute('SELECT * FROM tasks WHERE task_deadline <= ?', (now.timestamp(),))
             past_task_list = cursor.fetchall()
 
+        task_list = [Task(*task) for task in task_list]
+
         if task_list:
             response = await self.bot.get_cog("CheckTask").generate_task_list_text(task_list)
         else:
@@ -87,6 +91,7 @@ class ManageTask(commands.Cog):
             cursor.execute('SELECT * FROM tasks WHERE task_title LIKE ?', (f'%{keyword}%',))  # keyword in title
             task_list = cursor.fetchall()
 
+        task_list = [Task(*task) for task in task_list]
         if task_list:
             response = await self.bot.get_cog("CheckTask").generate_task_list_text(task_list)
         else:

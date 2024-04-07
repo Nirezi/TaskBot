@@ -1,9 +1,11 @@
 import datetime
 import sqlite3
+from typing import List
 
 from discord.ext import commands, tasks
 
 from constants import NOTICE_ROLE_ID, NOTICE_CHANNEL_ID
+from models import Task
 
 
 class CheckTask(commands.Cog):
@@ -12,21 +14,19 @@ class CheckTask(commands.Cog):
         self.notice_task.start()
 
     @staticmethod
-    async def generate_task_list_text(task_list: list, check_tomorrow=True) -> str:
-        now = datetime.datetime.now()
+    async def generate_task_list_text(task_list: List[Task], check_tomorrow=True) -> str:
         response = ""
         tomorrow_task = []
-        for (_, title, description, deadline) in task_list:
-            deadline = datetime.datetime.fromtimestamp(deadline)
-            if (deadline - now) < datetime.timedelta(days=1) and deadline > now:
-                tomorrow_task.append((_, title, description, deadline))
-            response += f"- {title}　～{deadline.year}年{deadline.month}月{deadline.day}日\n{description}\n"
+        for task in task_list:
+            response += str(task)
+            if task.is_deadline_tomorrow():
+                tomorrow_task.append(task)
 
         if check_tomorrow:
             if tomorrow_task:
                 response += "\n期限が明日の課題があります。\n"
-                for (_, title, description, deadline) in tomorrow_task:
-                    response += f"- {title}　～{deadline.year}年{deadline.month}月{deadline.day}日\n{description}\n"
+                for task in tomorrow_task:
+                    response += str(task)
             else:
                 response += "\n期限が明日の課題はありません。"
 
@@ -45,10 +45,12 @@ class CheckTask(commands.Cog):
             task_list = cursor.fetchall()
 
         response = f"<@&{NOTICE_ROLE_ID}>\n{now.month}月{now.day}日時点の課題状況をお知らせします。\n"
-        if not task_list:
-            response += "今のところ課題はないよ！やったね！！"
-        else:
+
+        task_list = [Task(*task) for task in task_list]
+        if task_list:
             response += await self.generate_task_list_text(task_list)
+        else:
+            response += "今のところ課題はないよ！やったね！！"
 
         notice_channel = self.bot.get_channel(NOTICE_CHANNEL_ID)
         await notice_channel.send(response)
